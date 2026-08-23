@@ -69,7 +69,7 @@ function initDb() {
       `);
 
       // Seed metadata, then demands, then community posts sequentially before resolving
-      db.run(`UPDATE meta SET value = '0' WHERE key = 'base_count'`);
+      // Do not reset base_count on startup; seed it below only if missing.
       db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, row) => {
         if (!row) {
           const initialBaseline = 0;

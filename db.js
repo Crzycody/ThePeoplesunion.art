@@ -164,16 +164,25 @@ function addPledge({ alias, email, phone, state, tier = 1, sms_opt_in = 1, notes
 }
 
 function registerTier2({ alias, email, phone, state, chapter }) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const pledge = await addPledge({ alias, email, phone, state, tier: 2, notes: `Verified Chapter: ${chapter || 'General'}` });
-      db.run(
-        `INSERT OR IGNORE INTO users (member_number, alias, email, phone, state, chapter, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, 'Verified Organizer', 1)`,
-        [pledge.member_number, pledge.alias, pledge.email, pledge.phone, pledge.state, chapter || `${pledge.state} Solidarity Chapter`],
-        function (err) {
-          resolve({ ...pledge, chapter: chapter || `${pledge.state} Solidarity Chapter`, role: 'Verified Organizer' });
-        }
-      );
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM users WHERE email = ?`, [email], async (err, existing) => {
+      if (err) return reject(err);
+      if (existing) return reject(new Error('Email already registered.'));
+      try {
+        const pledge = await addPledge({ alias, email, phone, state, tier: 2, notes: `Verified Chapter: ${chapter || 'General'}` });
+        const resolvedChapter = chapter || `${pledge.state} Solidarity Chapter`;
+        db.run(
+          `INSERT INTO users (member_number, alias, email, phone, state, chapter, role, is_verified) VALUES (?, ?, ?, ?, ?, ?, 'Verified Organizer', 1)`,
+          [pledge.member_number, pledge.alias, pledge.email, pledge.phone, pledge.state, resolvedChapter],
+          function (err) {
+            if (err) return reject(err);
+            resolve({ ...pledge, chapter: resolvedChapter, role: 'Verified Organizer' });
+          }
+        );
+      } catch (e) { reject(e); }
+    });
+  });
+}
     } catch (e) { reject(e); }
   });
 }

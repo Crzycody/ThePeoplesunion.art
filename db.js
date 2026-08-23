@@ -123,7 +123,9 @@ function getStats() {
         const percent = ((totalCount / 30000000) * 100).toFixed(4);
 
         db.all(`SELECT state, COUNT(*) as count FROM pledges WHERE state IS NOT NULL AND state != '' GROUP BY state ORDER BY count DESC LIMIT 10`, (err, stateRows) => {
+          if (err) return reject(err);
           db.all(`SELECT member_number, alias, state, tier, created_at FROM pledges ORDER BY id DESC LIMIT 8`, (err, recentRows) => {
+            if (err) return reject(err);
             resolve({
               total_pledges: totalCount,
               live_new_pledges: livePledges,

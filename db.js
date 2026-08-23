@@ -141,24 +141,31 @@ function getStats() {
 
 function addPledge({ alias, email, phone, state, tier = 1, sms_opt_in = 1, notes = '' }) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT COUNT(*) as count FROM pledges`, (err, countRow) => {
+    db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
       if (err) return reject(err);
-      db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
-        if (err) return reject(err);
-        const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
-        const nextMemberNumber = baseCount + (countRow.count || 0) + 1;
-        const cleanAlias = (alias && alias.trim()) ? alias.trim() : `Worker #${nextMemberNumber.toString().slice(-4)}`;
-        const cleanEmail = (email && email.trim()) ? email.trim() : `anonymous_${nextMemberNumber}@peoplesunion.local`;
+      const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
+      const placeholderAlias = alias && alias.trim() ? alias.trim() : null;
+      const placeholderEmail = email && email.trim() ? email.trim() : null;
 
-        db.run(
-          `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [nextMemberNumber, cleanAlias, cleanEmail, phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes],
-          function (err) {
+      db.run(
+        `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes)
+         SELECT
+           m.next_num,
+           COALESCE(?, 'Worker #' || substr(CAST(m.next_num AS TEXT), -4)),
+           COALESCE(?, 'anonymous_' || CAST(m.next_num AS TEXT) || '@peoplesunion.local'),
+           ?, ?, ?, ?, ?
+         FROM (SELECT COALESCE(MAX(member_number), ?) + 1 AS next_num FROM pledges) AS m`,
+        [placeholderAlias, placeholderEmail,
+         phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes,
+         baseCount],
+        function (err) {
+          if (err) return reject(err);
+          db.get(`SELECT member_number, alias, email, phone, state, tier FROM pledges WHERE rowid = ?`, [this.lastID], (err, row) => {
             if (err) return reject(err);
-            resolve({ id: this.lastID, member_number: nextMemberNumber, alias: cleanAlias, email: cleanEmail, state: state || 'US', tier });
-          }
-        );
-      });
+            resolve({ id: this.lastID, member_number: row.member_number, alias: row.alias, email: row.email, phone: row.phone, state: row.state, tier: row.tier });
+          });
+        }
+      );
     });
   });
 }
@@ -181,9 +188,6 @@ function registerTier2({ alias, email, phone, state, chapter }) {
         );
       } catch (e) { reject(e); }
     });
-  });
-}
-    } catch (e) { reject(e); }
   });
 }
 

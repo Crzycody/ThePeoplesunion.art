@@ -142,7 +142,9 @@ app.post('/api/community', async (req, res) => {
 app.post('/api/community/upvote', async (req, res) => {
   try {
     const { postId } = req.body;
+    if (!postId) return res.status(400).json({ error: 'Post ID required' });
     const updated = await db.upvotePost(postId);
+    if (!updated) return res.status(404).json({ error: 'Post not found' });
     broadcastSSE('post_upvoted', updated);
     res.json({ success: true, post: updated });
   } catch (err) { res.status(500).json({ error: err.message }); }

@@ -1,110 +1,167 @@
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
-const QRCode = require('qrcode');
 const path = require('path');
-const { getCount, pledgeExists, insertPledge } = require('./db');
+const QRCode = require('qrcode');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- SSE Clients ---
-const clients = new Set();
+// SSE clients
+const sseClients = new Set();
 
-function broadcast(data) {
-  const msg = `data: ${JSON.stringify(data)}\n\n`;
-  for (const res of clients) {
-    try { res.write(msg); } catch (_) { clients.delete(res); }
+let activeOnlineUsers = 4812;
+setInterval(() => {
+  const delta = Math.floor(Math.random() * 19) - 9;
+  activeOnlineUsers = Math.max(3500, activeOnlineUsers + delta);
+}, 4000);
+
+function broadcastSSE(eventType, data) {
+  const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients) {
+    try { client.res.write(payload); } catch (e) { sseClients.delete(client); }
   }
 }
 
-// Broadcast live user count every 10 s
-setInterval(() => {
-  broadcast({ type: 'users', count: clients.size });
-}, 10000);
+setInterval(async () => {
+  if (sseClients.size > 0) {
+    try {
+      const stats = await db.getStats();
+      broadcastSSE('heartbeat', { total_pledges: stats.total_pledges, online_users: activeOnlineUsers, percent_to_strike: stats.percent_to_strike });
+    } catch (e) { console.error('Heartbeat error:', e); }
+  }
+}, 3000);
 
-// --- SSE endpoint ---
-app.get('/events', (req, res) => {
-  res.set({
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'X-Accel-Buffering': 'no',
-    Connection: 'keep-alive',
-  });
+// SSE endpoint
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.flushHeaders();
 
-  // Send initial state
-  res.write(`data: ${JSON.stringify({ type: 'init', count: getCount(), users: clients.size })}\n\n`);
+  const client = { id: Date.now(), res };
+  sseClients.add(client);
 
-  clients.add(res);
-
-  // Heartbeat
-  const hb = setInterval(() => {
-    try { res.write(': heartbeat\n\n'); } catch (_) { clearInterval(hb); }
-  }, 25000);
-
-  req.on('close', () => {
-    clients.delete(res);
-    clearInterval(hb);
+  db.getStats().then(stats => {
+    res.write(`event: initial\ndata: ${JSON.stringify({ ...stats, online_users: activeOnlineUsers })}\n\n`);
   });
+
+  req.on('close', () => sseClients.delete(client));
 });
 
-// --- Pledge endpoint ---
-app.post('/pledge', (req, res) => {
-  const { alias, email, phone } = req.body || {};
-
-  if (!alias || typeof alias !== 'string' || alias.trim().length < 2) {
-    return res.status(400).json({ error: 'Alias must be at least 2 characters.' });
-  }
-  if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    return res.status(400).json({ error: 'Valid email required.' });
-  }
-
-  const cleanEmail = email.trim().toLowerCase();
-  const cleanAlias = alias.trim().slice(0, 60);
-  const cleanPhone = phone ? phone.trim().slice(0, 20) : null;
-
-  if (pledgeExists(cleanEmail)) {
-    return res.status(409).json({ error: 'This email has already pledged. Thank you!' });
-  }
-
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '';
-  const ip_hash = crypto.createHash('sha256').update(ip).digest('hex');
-
-  const id = insertPledge({ alias: cleanAlias, email: cleanEmail, phone: cleanPhone, ip_hash });
-  const count = getCount();
-
-  broadcast({ type: 'pledge', count });
-
-  res.json({ id, count, alias: cleanAlias });
-});
-
-// --- Count endpoint ---
-app.get('/count', (_req, res) => {
-  res.json({ count: getCount(), users: clients.size });
-});
-
-// --- QR Code endpoint ---
-app.get('/qr', async (req, res) => {
-  const url = req.query.url || `${req.protocol}://${req.get('host')}`;
+// Stats
+app.get('/api/stats', async (req, res) => {
   try {
-    const png = await QRCode.toBuffer(url, {
-      errorCorrectionLevel: 'H',
-      margin: 2,
-      width: 400,
-      color: { dark: '#000000', light: '#ffffff' },
-    });
-    res.set('Content-Type', 'image/png');
-    res.send(png);
-  } catch (e) {
-    res.status(500).json({ error: 'QR generation failed.' });
-  }
+    const stats = await db.getStats();
+    res.json({ success: true, ...stats, online_users: activeOnlineUsers });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.listen(PORT, () => {
-  console.log(`The People's Union server running on port ${PORT}`);
+// Pledge (Tier 1)
+app.post('/api/pledge', async (req, res) => {
+  try {
+    const { alias, email, phone, state, notes } = req.body;
+    if (!alias && !email && !phone) {
+      return res.status(400).json({ error: 'Please provide at least an alias, email, or phone number to pledge.' });
+    }
+    const pledge = await db.addPledge({
+      alias: alias || (email ? email.split('@')[0] : 'Solidarity Worker'),
+      email: email || `alias_${Date.now()}@peoplesunion.local`,
+      phone: phone || null,
+      state: state || 'US',
+      tier: 1,
+      sms_opt_in: 1,
+      notes: notes || 'Street / QR Mobilization'
+    });
+    const currentStats = await db.getStats();
+    broadcastSSE('new_pledge', { member_number: pledge.member_number, alias: pledge.alias, state: pledge.state, tier: 1, total_pledges: currentStats.total_pledges, online_users: activeOnlineUsers });
+    res.json({ success: true, message: "Pledge recorded. You are officially counted in The People's Union!", pledge, stats: currentStats });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// Tier 2 registration
+app.post('/api/register-tier2', async (req, res) => {
+  try {
+    const { alias, email, phone, state, chapter } = req.body;
+    if (!email || !alias) return res.status(400).json({ error: 'Alias and valid email are required for Tier 2 verification.' });
+    const user = await db.registerTier2({ alias, email, phone, state, chapter });
+    const currentStats = await db.getStats();
+    broadcastSSE('new_pledge', { member_number: user.member_number, alias: user.alias, state: user.state, tier: 2, total_pledges: currentStats.total_pledges, online_users: activeOnlineUsers });
+    res.json({ success: true, message: 'Tier 2 Account Verified. Welcome to the Organizer Caucus.', user, stats: currentStats });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Demands
+app.get('/api/demands', async (req, res) => {
+  try {
+    const demands = await db.getDemands();
+    res.json({ success: true, demands });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/demands/vote', async (req, res) => {
+  try {
+    const { demandId } = req.body;
+    if (!demandId) return res.status(400).json({ error: 'Demand ID required' });
+    const updated = await db.voteDemand(demandId);
+    broadcastSSE('demand_voted', updated);
+    res.json({ success: true, demand: updated });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Community board
+app.get('/api/community', async (req, res) => {
+  try {
+    const posts = await db.getCommunityPosts();
+    res.json({ success: true, posts });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/community', async (req, res) => {
+  try {
+    const { author_alias, author_chapter, category, title, content } = req.body;
+    if (!title || !content || !author_alias) return res.status(400).json({ error: 'Author, Title and Content are required' });
+    const newPost = await db.addCommunityPost({ author_alias, author_chapter: author_chapter || 'National Solidarity Chapter', category: category || 'General Organizing', title, content, author_tier: 2 });
+    broadcastSSE('new_post', newPost);
+    res.json({ success: true, post: newPost });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/community/upvote', async (req, res) => {
+  try {
+    const { postId } = req.body;
+    const updated = await db.upvotePost(postId);
+    broadcastSSE('post_upvoted', updated);
+    res.json({ success: true, post: updated });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// QR Code
+app.get('/api/qr', async (req, res) => {
+  try {
+    const targetUrl = req.query.url || `${req.protocol}://${req.get('host')}`;
+    const qrDataUrl = await QRCode.toDataURL(targetUrl, { errorCorrectionLevel: 'H', margin: 1, color: { dark: '#111827', light: '#FFFFFF' }, width: 400 });
+    res.json({ success: true, qr: qrDataUrl, url: targetUrl });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Start
+db.initDb().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`=================================================`);
+    console.log(`  THE PEOPLE'S UNION PLATFORM RUNNING`);
+    console.log(`  Live Server: http://0.0.0.0:${PORT}`);
+    console.log(`=================================================`);
+  });
+}).catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
+

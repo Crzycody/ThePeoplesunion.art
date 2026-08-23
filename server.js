@@ -137,8 +137,8 @@ app.get('/api/community', async (req, res) => {
 
 app.post('/api/community', async (req, res) => {
   try {
-    const { author_alias, author_email, author_chapter, category, title, content } = req.body;
-    if (!title || !content || !author_alias || !author_email) return res.status(400).json({ error: 'Author, Email, Title and Content are required' });
+    const { author_email, author_chapter, category, title, content } = req.body;
+    if (!title || !content || !author_email) return res.status(400).json({ error: 'Email, Title and Content are required' });
     const verifiedUser = await db.getUserByEmail(author_email);
     if (!verifiedUser) return res.status(403).json({ error: 'Tier 2 verification required to publish community posts.' });
     const newPost = await db.addCommunityPost({ author_alias: verifiedUser.alias, author_chapter: verifiedUser.chapter || 'National Solidarity Chapter', category: category || 'General Organizing', title, content, author_tier: 2 });

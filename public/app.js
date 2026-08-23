@@ -207,6 +207,15 @@ document.getElementById('btn-print-qr')?.addEventListener('click', () => {
 });
 
 // ── Poster generator ───────────────────────────────────────────────────────
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 document.getElementById('btn-print-poster')?.addEventListener('click', () => {
   const headline = document.getElementById('poster-headline')?.value || '';
   const sub = document.getElementById('poster-sub')?.value || '';
@@ -216,8 +225,8 @@ document.getElementById('btn-print-poster')?.addEventListener('click', () => {
     <style>body{font-family:sans-serif;text-align:center;padding:60px;background:#111;color:#fff;}
     h1{font-size:3rem;margin-bottom:1rem;}p{font-size:1.5rem;}img{width:200px;margin-top:2rem;}</style>
     </head><body>
-    <h1>${headline.replace(/</g,'&lt;')}</h1>
-    <p>${sub.replace(/</g,'&lt;')}</p>
+    <h1>${escapeHtml(headline)}</h1>
+    <p>${escapeHtml(sub)}</p>
     <img src="/qr" alt="QR Code" />
     <p style="margin-top:1rem;font-size:1rem;opacity:.7;">ThePeoplesUnion.art</p>
     <script>window.onload=()=>window.print();<\/script>
@@ -308,4 +317,163 @@ document.getElementById('kiosk-form')?.addEventListener('submit', async function
 // Close kiosk on Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeKiosk();
+});
+
+// ── Demands ────────────────────────────────────────────────────────────────
+async function loadDemands() {
+  const list = document.getElementById('demands-list');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/demands');
+    const data = await res.json();
+    if (!data.success) return;
+    list.innerHTML = '';
+    for (const d of data.demands) {
+      const item = document.createElement('div');
+      item.className = 'demand-item';
+      item.innerHTML = `<span class="demand-text">${escapeHtml(d.title)}</span>
+        <button class="btn-secondary btn-vote" data-id="${escapeHtml(String(d.id))}">▲ ${fmt(d.votes)}</button>`;
+      list.appendChild(item);
+    }
+  } catch (err) { console.error('Demands load error:', err); }
+}
+
+document.getElementById('demands-list')?.addEventListener('click', async e => {
+  const btn = e.target.closest('.btn-vote');
+  if (!btn) return;
+  const demandId = btn.dataset.id;
+  try {
+    const res = await fetch('/api/demands/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ demandId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      btn.textContent = `▲ ${fmt(data.demand.votes)}`;
+    }
+  } catch (err) { console.error('Vote error:', err); }
+});
+
+loadDemands();
+
+// ── Community board ────────────────────────────────────────────────────────
+async function loadCommunityPosts() {
+  const list = document.getElementById('community-list');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/community');
+    const data = await res.json();
+    if (!data.success) return;
+    list.innerHTML = '';
+    for (const p of data.posts) {
+      const card = document.createElement('div');
+      card.className = 'community-post';
+      card.dataset.id = p.id;
+      card.innerHTML = `<div class="post-header">
+          <span class="post-alias">${escapeHtml(p.author_alias)}</span>
+          <span class="post-chapter">${escapeHtml(p.author_chapter || '')}</span>
+          <span class="post-category">${escapeHtml(p.category || '')}</span>
+        </div>
+        <h4 class="post-title">${escapeHtml(p.title)}</h4>
+        <p class="post-content">${escapeHtml(p.content)}</p>
+        <button class="btn-secondary btn-upvote" data-id="${escapeHtml(String(p.id))}">▲ ${fmt(p.upvotes)}</button>`;
+      list.appendChild(card);
+    }
+  } catch (err) { console.error('Community load error:', err); }
+}
+
+document.getElementById('community-list')?.addEventListener('click', async e => {
+  const btn = e.target.closest('.btn-upvote');
+  if (!btn) return;
+  const postId = btn.dataset.id;
+  try {
+    const res = await fetch('/api/community/upvote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId }),
+    });
+    const data = await res.json();
+    if (data.success) btn.textContent = `▲ ${fmt(data.post.upvotes)}`;
+  } catch (err) { console.error('Upvote error:', err); }
+});
+
+document.getElementById('community-post-form')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const msg = document.getElementById('community-msg');
+  const btn = this.querySelector('.btn-post-submit');
+  const author_email = document.getElementById('cp-email')?.value.trim();
+  const title = document.getElementById('cp-title')?.value.trim();
+  const content = document.getElementById('cp-content')?.value.trim();
+  const category = document.getElementById('cp-category')?.value.trim();
+
+  if (!author_email || !title || !content) {
+    if (msg) { msg.textContent = 'Email, title, and content are required.'; msg.className = 'form-msg error'; }
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Posting…';
+  try {
+    const res = await fetch('/api/community', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author_email, title, content, category }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    if (msg) { msg.textContent = 'Post published!'; msg.className = 'form-msg success'; }
+    this.reset();
+    loadCommunityPosts();
+  } catch (err) {
+    if (msg) { msg.textContent = err.message || 'Something went wrong.'; msg.className = 'form-msg error'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'POST';
+  }
+});
+
+loadCommunityPosts();
+
+// ── Tier 2 registration modal ──────────────────────────────────────────────
+document.getElementById('btn-open-tier2')?.addEventListener('click', () => {
+  document.getElementById('tier2-modal')?.classList.remove('hidden');
+});
+
+document.getElementById('tier2-modal-close')?.addEventListener('click', () => {
+  document.getElementById('tier2-modal')?.classList.add('hidden');
+});
+
+document.getElementById('tier2-form')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const msg = document.getElementById('tier2-msg');
+  const btn = this.querySelector('.btn-tier2-submit');
+  const alias = document.getElementById('t2-alias')?.value.trim();
+  const email = document.getElementById('t2-email')?.value.trim();
+  const phone = document.getElementById('t2-phone')?.value.trim();
+  const state = document.getElementById('t2-state')?.value.trim();
+  const chapter = document.getElementById('t2-chapter')?.value.trim();
+  const invite_code = document.getElementById('t2-invite')?.value.trim();
+
+  if (!alias || !email) {
+    if (msg) { msg.textContent = 'Alias and email are required.'; msg.className = 'form-msg error'; }
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  try {
+    const res = await fetch('/api/register-tier2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alias, email, phone, state, chapter, invite_code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+    if (msg) { msg.textContent = data.message || 'Tier 2 verified!'; msg.className = 'form-msg success'; }
+    this.reset();
+  } catch (err) {
+    if (msg) { msg.textContent = err.message || 'Something went wrong.'; msg.className = 'form-msg error'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'VERIFY';
+  }
 });

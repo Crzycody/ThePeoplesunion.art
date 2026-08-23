@@ -145,12 +145,12 @@ function getStats() {
 
 function addPledge({ alias, email, phone, state, tier = 1, sms_opt_in = 1, notes = '' }) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT COUNT(*) as count FROM pledges`, (err, countRow) => {
+    db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
       if (err) return reject(err);
-      db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
+      const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
+      db.get(`SELECT MAX(member_number) as maxNum FROM pledges`, (err, maxRow) => {
         if (err) return reject(err);
-        const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
-        const nextMemberNumber = baseCount + (countRow.count || 0) + 1;
+        const nextMemberNumber = Math.max(baseCount, maxRow && maxRow.maxNum ? maxRow.maxNum : 0) + 1;
         const cleanAlias = (alias && alias.trim()) ? alias.trim() : `Worker #${nextMemberNumber.toString().slice(-4)}`;
         const cleanEmail = (email && email.trim()) ? email.trim() : `anonymous_${nextMemberNumber}@peoplesunion.local`;
 

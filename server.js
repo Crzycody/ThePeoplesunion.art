@@ -61,6 +61,9 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => sseClients.delete(client));
 });
 
+// Health check (used by Railway)
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // Stats
 app.get('/api/stats', async (req, res) => {
   try {

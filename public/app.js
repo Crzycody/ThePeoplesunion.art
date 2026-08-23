@@ -5,6 +5,32 @@ function fmt(n) {
   return Number(n || 0).toLocaleString();
 }
 
+// ── Donation modal ─────────────────────────────────────────────────────────
+document.getElementById('btn-donate')?.addEventListener('click', () => {
+  document.getElementById('donate-modal')?.classList.remove('hidden');
+});
+
+document.getElementById('donate-modal-close')?.addEventListener('click', () => {
+  document.getElementById('donate-modal')?.classList.add('hidden');
+});
+
+document.getElementById('donate-modal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('donate-modal')) {
+    document.getElementById('donate-modal').classList.add('hidden');
+  }
+});
+
+document.querySelectorAll('.btn-copy-addr').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const addr = btn.dataset.addr;
+    navigator.clipboard?.writeText(addr).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  });
+});
+
 function randomAlias() {
   const adj = ['Solidarity', 'United', 'Rising', 'Steelwork', 'Farmhand', 'Nightshift', 'Redline', 'Ironclad', 'Bayshore', 'Highline'];
   const noun = ['Worker', 'Organizer', 'Advocate', 'Delegate', 'Member', 'Striker', 'Builder', 'Voice', 'Union', 'Force'];
@@ -314,9 +340,12 @@ document.getElementById('kiosk-form')?.addEventListener('submit', async function
   }
 });
 
-// Close kiosk on Escape key
+// Close kiosk or donate modal on Escape key
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeKiosk();
+  if (e.key === 'Escape') {
+    closeKiosk();
+    document.getElementById('donate-modal')?.classList.add('hidden');
+  }
 });
 
 // ── Demands ────────────────────────────────────────────────────────────────

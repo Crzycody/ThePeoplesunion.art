@@ -17,6 +17,7 @@
     <a href="#mobilizer">MOBILIZE</a>
     <a href="#strategy">STRATEGY</a>
     <button id="btn-kiosk" class="btn-kiosk-nav" title="Fullscreen Street Kiosk Mode">⚡ KIOSK MODE</button>
+    <button id="btn-donate" class="btn-donate-nav" title="Support The People's Union">💛 DONATE</button>
   </div>
 </nav>
 
@@ -193,6 +194,122 @@
       <p>Spread the word → scan below!</p>
       <img id="kiosk-qr" src="/qr" alt="QR" class="kiosk-qr-img" />
     </div>
+  </div>
+</div>
+
+<!-- ===== DONATION MODAL ===== -->
+<div id="donate-modal" class="donate-modal hidden" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
+  <div class="donate-modal-inner">
+    <button id="donate-modal-close" class="donate-close" aria-label="Close donation modal">✕</button>
+    <h2 id="donate-modal-title" class="donate-title">💛 SUPPORT THE MOVEMENT</h2>
+    <p class="donate-sub">100% of funds support organizing infrastructure, mutual aid, and platform operations. Send directly to any address below — no middlemen.</p>
+
+    <div class="wallet-list">
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Ethereum</span>
+        <code class="wallet-addr" id="addr-eth">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Bitcoin</span>
+        <code class="wallet-addr">bc1q9034eq77mwec7tw0zwtumkrlp8g3cauehnjmkc</code>
+        <button class="btn-copy-addr" data-addr="bc1q9034eq77mwec7tw0zwtumkrlp8g3cauehnjmkc">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Solana</span>
+        <code class="wallet-addr">3S6V3We7RszrAaLwferUBubJia7BRbHCp41uZGHkDtwR</code>
+        <button class="btn-copy-addr" data-addr="3S6V3We7RszrAaLwferUBubJia7BRbHCp41uZGHkDtwR">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Linea</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Coinbase (Base)</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Arbitrum</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">BNB Chain</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Optimism (OP)</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">HyperEVM</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Polygon</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Monad</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Avalanche</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">MegaETH</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Robinhood Chain</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Sei</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Tempo</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+      <div class="wallet-item">
+        <span class="wallet-chain">Tron</span>
+        <code class="wallet-addr">0x0c293cEF889cC643fAC37686736a0590D8E7c54b</code>
+        <button class="btn-copy-addr" data-addr="0x0c293cEF889cC643fAC37686736a0590D8E7c54b">Copy</button>
+      </div>
+
+    </div>
+    <p class="donate-note">Addresses are published transparently. All transactions are verifiable on-chain.</p>
   </div>
 </div>
 

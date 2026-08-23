@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The People's Union — 30 million workers. One collective pause." />
+  <title>THE PEOPLE'S UNION</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav id="main-nav">
+  <span class="nav-brand">THE PEOPLE'S UNION</span>
+  <div class="nav-links">
+    <a href="#pledge">PLEDGE</a>
+    <a href="#mobilizer">MOBILIZE</a>
+    <a href="#strategy">STRATEGY</a>
+    <button id="btn-kiosk" class="btn-kiosk-nav" title="Fullscreen Street Kiosk Mode">⚡ KIOSK MODE</button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header id="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">THE MOMENT IS NOW</p>
+    <h1 class="hero-headline"><em>THE PEOPLE'S<br>UNION</em></h1>
+    <p class="hero-sub">30,000,000 workers. One collective pause.<br>No bosses. No leaders. Just math.</p>
+    <a href="#pledge" class="btn-primary">TAKE THE PLEDGE ↓</a>
+  </div>
+</header>
+
+<!-- ===== LIVE COUNTERS ===== -->
+<section id="counters">
+  <div class="counter-grid">
+    <div class="counter-card counter-main">
+      <p class="counter-label">TOTAL VERIFIED PLEDGES</p>
+      <div id="odometer" class="odometer">0</div>
+      <p class="counter-goal">GOAL: 30,000,000</p>
+    </div>
+    <div class="counter-card">
+      <p class="counter-label">LIVE ONLINE NOW</p>
+      <div id="live-users" class="counter-num live-pulse">—</div>
+    </div>
+  </div>
+
+  <!-- Milestone progress bar -->
+  <div class="milestone-bar-wrap">
+    <div class="milestone-bar-track">
+      <div id="milestone-fill" class="milestone-bar-fill"></div>
+      <div class="milestone-markers">
+        <span class="mm" style="left:16.67%">5M<br><small>Day of Action</small></span>
+        <span class="mm" style="left:33.33%">10M<br><small>Mutual Aid</small></span>
+        <span class="mm" style="left:66.67%">20M<br><small>Supply Pause</small></span>
+        <span class="mm" style="left:100%">30M<br><small>General Strike</small></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLEDGE FORM ===== -->
+<section id="pledge">
+  <div class="section-inner">
+    <h2 class="section-title">JOIN THE PLEDGE</h2>
+    <p class="section-sub">Anonymous or named. No dues. No obligations until the counter hits 30 million.</p>
+
+    <form id="pledge-form" autocomplete="off" novalidate>
+      <div class="form-row">
+        <div class="input-wrap">
+          <input type="text" id="f-alias" name="alias" placeholder="First name or alias" maxlength="60" required />
+          <button type="button" id="btn-alias" title="Generate random alias">🎲 Random</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <input type="email" id="f-email" name="email" placeholder="Email address (private)" required />
+      </div>
+      <div class="form-row">
+        <input type="tel" id="f-phone" name="phone" placeholder="Phone (optional — SMS strike alerts)" />
+      </div>
+      <div class="form-row">
+        <button type="submit" class="btn-primary btn-submit">ENTER ↵ &nbsp; TAKE THE PLEDGE</button>
+      </div>
+      <p id="form-msg" class="form-msg" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ===== STRIKE PASS (hidden until pledge) ===== -->
+<section id="strike-pass-section" class="hidden">
+  <div class="strike-pass" id="strike-pass">
+    <p class="pass-label">✊ YOUR DIGITAL UNION STRIKE PASS</p>
+    <div class="pass-number" id="pass-number">#00,000,000</div>
+    <p class="pass-alias" id="pass-alias">Worker_XX_0000</p>
+    <p class="pass-msg">You are registered. Spread the word.</p>
+    <div class="pass-share">
+      <button class="btn-secondary" id="btn-copy-link">📋 Copy Link</button>
+      <button class="btn-secondary" id="btn-share-twitter">🐦 Share</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STRATEGY ===== -->
+<section id="strategy">
+  <div class="section-inner">
+    <h2 class="section-title">THE ARCHITECTURE</h2>
+
+    <div class="tier-grid">
+      <div class="tier-card tier1">
+        <h3>TIER 1<br><small>PUBLIC SUPPORTER</small></h3>
+        <ul>
+          <li>Name/Alias + Email/SMS</li>
+          <li>5-second rapid street pledge</li>
+          <li>Increments 30M strike counter</li>
+          <li>One-way broadcast listener</li>
+          <li class="highlight">ZERO PUBLISHING PERMISSIONS</li>
+          <li class="highlight">ZERO LEGAL AGENCY / LIABILITY</li>
+        </ul>
+      </div>
+      <div class="tier-divider">↔</div>
+      <div class="tier-card tier2">
+        <h3>TIER 2<br><small>VERIFIED ORGANIZER</small></h3>
+        <ul>
+          <li>Verified account &amp; chapter</li>
+          <li>Signed Code of Conduct</li>
+          <li>Access to Community Board</li>
+          <li>Democratic Demands Voting</li>
+          <li>Mutual Aid Coordination</li>
+          <li>Peer Moderation &amp; Sanctions</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="leaderless-box">
+      <h3>THE LEADERLESS SHIELD</h3>
+      <blockquote>
+        "I don't own The People's Union. I am Worker #1. Attack me all you want — it doesn't change the price of groceries or rent, and it doesn't stop the counter. The power is held equally by 30 million workers."
+      </blockquote>
+      <p>The strike is triggered by an <strong>algorithmic milestone</strong> — 30 million verified pledges (~18% of the US labor force) — not by the decree of a single individual. You cannot discredit math.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STREET MOBILIZER ===== -->
+<section id="mobilizer">
+  <div class="section-inner">
+    <h2 class="section-title">STREET MOBILIZER &amp; QR HUB</h2>
+
+    <div class="mob-grid">
+      <div class="mob-card">
+        <h3>QR CODE</h3>
+        <div id="qr-wrap">
+          <img id="qr-img" src="/qr" alt="QR code linking to this platform" />
+        </div>
+        <button class="btn-secondary" id="btn-print-qr">🖨 Print QR Sheet</button>
+      </div>
+
+      <div class="mob-card">
+        <h3>POSTER GENERATOR</h3>
+        <label for="poster-headline">Headline:</label>
+        <input type="text" id="poster-headline" value="TIRED OF BEING OVERWORKED?" maxlength="80" />
+        <label for="poster-sub">Sub-line:</label>
+        <input type="text" id="poster-sub" value="Join 30 million workers. Scan &amp; pledge now." maxlength="100" />
+        <button class="btn-primary" id="btn-print-poster">🖨 PRINT POSTER</button>
+      </div>
+
+      <div class="mob-card">
+        <h3>KIOSK MODE</h3>
+        <p>Hand your device to someone on the street. They pledge and it auto-resets in 3 seconds.</p>
+        <button class="btn-primary" id="btn-kiosk-mob">⚡ LAUNCH KIOSK</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== KIOSK OVERLAY ===== -->
+<div id="kiosk-overlay" class="kiosk-overlay hidden" role="dialog" aria-modal="true">
+  <button id="kiosk-close" class="kiosk-close" title="Exit kiosk mode">✕ EXIT</button>
+  <div class="kiosk-inner">
+    <h1 class="kiosk-headline"><em>THE PEOPLE'S UNION</em></h1>
+    <p class="kiosk-sub">Take 30 seconds. Change everything.</p>
+    <div id="kiosk-count" class="kiosk-count">Loading…</div>
+
+    <form id="kiosk-form" autocomplete="off" novalidate>
+      <input type="text" id="k-alias" placeholder="Your name or alias" maxlength="60" required />
+      <input type="email" id="k-email" placeholder="Email address" required />
+      <button type="submit" class="btn-kiosk-submit">PLEDGE ↵</button>
+      <p id="kiosk-msg" class="kiosk-msg" aria-live="polite"></p>
+    </form>
+
+    <div id="kiosk-celebrate" class="kiosk-celebrate hidden">
+      <div class="kiosk-boom">✊ YOU'RE IN!</div>
+      <div class="kiosk-pass-num" id="kiosk-pass-num">#00,000,000</div>
+      <p>Spread the word → scan below!</p>
+      <img id="kiosk-qr" src="/qr" alt="QR" class="kiosk-qr-img" />
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONFETTI CANVAS ===== -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ===== FOOTER ===== -->
+<footer id="main-footer">
+  <p><strong>THE PEOPLE'S UNION</strong> &nbsp;|&nbsp; Worker Node #1 &nbsp;|&nbsp; Not a legal entity. Not a union. A mathematical threshold.</p>
+  <p class="footer-legal">Pledge data is encrypted and never sold. Tier 1 supporters have zero publishing permissions and zero legal agency. All content is protected under First Amendment petition rights.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

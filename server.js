@@ -143,13 +143,25 @@ app.post('/api/community/upvote', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// QR Code
+// QR Code (JSON)
 app.get('/api/qr', async (req, res) => {
   try {
     const targetUrl = req.query.url || `${req.protocol}://${req.get('host')}`;
     const qrDataUrl = await QRCode.toDataURL(targetUrl, { errorCorrectionLevel: 'H', margin: 1, color: { dark: '#111827', light: '#FFFFFF' }, width: 400 });
     res.json({ success: true, qr: qrDataUrl, url: targetUrl });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// QR Code (PNG image for <img src="/qr">)
+app.get('/qr', async (req, res) => {
+  try {
+    const targetUrl = req.query.url || `${req.protocol}://${req.get('host')}`;
+    const png = await QRCode.toBuffer(targetUrl, { errorCorrectionLevel: 'H', margin: 1, color: { dark: '#111827', light: '#FFFFFF' }, width: 400 });
+    res.setHeader('Content-Type', 'image/png');
+    res.send(png);
+  } catch (err) {
+    res.status(500).send('QR generation failed');
+  }
 });
 
 // Start

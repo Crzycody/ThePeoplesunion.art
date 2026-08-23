@@ -68,44 +68,44 @@ function initDb() {
         )
       `);
 
-      // Seed metadata
+      // Seed metadata, then demands, then community posts sequentially before resolving
       db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, row) => {
         if (!row) {
           db.run(`INSERT INTO meta (key, value) VALUES ('base_count', '1428914')`);
           db.run(`INSERT INTO meta (key, value) VALUES ('target_count', '30000000')`);
         }
-      });
 
-      // Seed demands
-      db.get(`SELECT COUNT(*) as count FROM demands`, (err, row) => {
-        if (row && row.count === 0) {
-          const coreDemands = [
-            { id: 1, title: "Federal Living Wage Indexed to Inflation", category: "Economic", description: "Mandate a base federal living wage tied automatically to the real Consumer Price Index and regional cost-of-living adjustments.", votes: 1245800 },
-            { id: 2, title: "Universal Healthcare (Medicare for All)", category: "Health & Human Rights", description: "Completely sever healthcare from employer control. Guaranteed medical, dental, vision, and mental health coverage for every resident.", votes: 1398200 },
-            { id: 3, title: "32-Hour / 4-Day Workweek with No Loss in Pay", category: "Labor Standards", description: "Recognize that worker productivity has quadrupled. Overtime threshold lowered to 32 hours to restore work-life balance and health.", votes: 1184900 },
-            { id: 4, title: "National Rent Cap & Ban on Wall Street Residential Landlords", category: "Housing", description: "Cap annual residential rent increases at 3% and ban hedge funds and private equity firms from purchasing single-family housing.", votes: 1312400 },
-            { id: 5, title: "Total Ban on Corporate Political Spending & Stock Trading for Congress", category: "Democracy", description: "End Citizens United through constitutional amendment and immediately bar all sitting lawmakers and their families from trading individual stocks.", votes: 1410200 }
-          ];
-          const stmt = db.prepare(`INSERT INTO demands (id, title, category, description, votes) VALUES (?, ?, ?, ?, ?)`);
-          coreDemands.forEach(d => stmt.run(d.id, d.title, d.category, d.description, d.votes));
-          stmt.finalize();
-        }
-      });
+        // Seed demands
+        db.get(`SELECT COUNT(*) as count FROM demands`, (err, row) => {
+          if (row && row.count === 0) {
+            const coreDemands = [
+              { id: 1, title: "Federal Living Wage Indexed to Inflation", category: "Economic", description: "Mandate a base federal living wage tied automatically to the real Consumer Price Index and regional cost-of-living adjustments.", votes: 1245800 },
+              { id: 2, title: "Universal Healthcare (Medicare for All)", category: "Health & Human Rights", description: "Completely sever healthcare from employer control. Guaranteed medical, dental, vision, and mental health coverage for every resident.", votes: 1398200 },
+              { id: 3, title: "32-Hour / 4-Day Workweek with No Loss in Pay", category: "Labor Standards", description: "Recognize that worker productivity has quadrupled. Overtime threshold lowered to 32 hours to restore work-life balance and health.", votes: 1184900 },
+              { id: 4, title: "National Rent Cap & Ban on Wall Street Residential Landlords", category: "Housing", description: "Cap annual residential rent increases at 3% and ban hedge funds and private equity firms from purchasing single-family housing.", votes: 1312400 },
+              { id: 5, title: "Total Ban on Corporate Political Spending & Stock Trading for Congress", category: "Democracy", description: "End Citizens United through constitutional amendment and immediately bar all sitting lawmakers and their families from trading individual stocks.", votes: 1410200 }
+            ];
+            const stmt = db.prepare(`INSERT INTO demands (id, title, category, description, votes) VALUES (?, ?, ?, ?, ?)`);
+            coreDemands.forEach(d => stmt.run(d.id, d.title, d.category, d.description, d.votes));
+            stmt.finalize();
+          }
 
-      // Seed community posts
-      db.get(`SELECT COUNT(*) as count FROM community_posts`, (err, row) => {
-        if (row && row.count === 0) {
-          const initialPosts = [
-            { author_alias: "Ironworker_Dave", author_chapter: "Midwest Chapter - Chicago, IL", author_tier: 2, category: "Field Organizing", title: "Printed 500 QR Code stickers for local transit stops — results & tips", content: "Hey comrades, yesterday we set up a table near the Red Line station with the live counter on a tablet. People were shocked to see the counter tick up right in front of them when they scanned. We had over 180 pledges in 3 hours. People are ready.", upvotes: 428 },
-            { author_alias: "NurseElena_RN", author_chapter: "Pacific Northwest - Seattle, WA", author_tier: 2, category: "Mutual Aid", title: "Setting up regional strike emergency food & insulin mutual aid banks", content: "When 30 million people withhold labor, we must protect our most vulnerable. Our healthcare worker caucus is drafting the emergency healthcare strike protocol to ensure urgent triage is maintained while economic leverage is maximized.", upvotes: 612 },
-            { author_alias: "AnonymousOrganizer_KC", author_chapter: "Heartland Chapter - Kansas City, MO", author_tier: 2, category: "Security & Legal", title: "Why Tier 1 anonymity protects the frontlines from employer retaliation", content: "A quick reminder to all field captains: when handing out QR codes, emphasize to workers that Tier 1 requires only a first name or alias. Their employer cannot subpoena a decentralized movement with zero public doxxing vectors.", upvotes: 389 },
-            { author_alias: "LogisticsDriver_09", author_chapter: "Inland Empire - Ontario, CA", author_tier: 2, category: "Direct Action", title: "Freight and logistics caucuses coordinating cross-state communication", content: "Supply chain workers are the spine of the economy. If the top 5 freight hubs pause simultaneously, the leverage is absolute. Keep spreading the QR cards at truck stops and fulfillment centers.", upvotes: 554 }
-          ];
-          const stmt = db.prepare(`INSERT INTO community_posts (author_alias, author_chapter, author_tier, category, title, content, upvotes) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-          initialPosts.forEach(p => stmt.run(p.author_alias, p.author_chapter, p.author_tier, p.category, p.title, p.content, p.upvotes));
-          stmt.finalize();
-        }
-        resolve();
+          // Seed community posts
+          db.get(`SELECT COUNT(*) as count FROM community_posts`, (err, row) => {
+            if (row && row.count === 0) {
+              const initialPosts = [
+                { author_alias: "Ironworker_Dave", author_chapter: "Midwest Chapter - Chicago, IL", author_tier: 2, category: "Field Organizing", title: "Printed 500 QR Code stickers for local transit stops — results & tips", content: "Hey comrades, yesterday we set up a table near the Red Line station with the live counter on a tablet. People were shocked to see the counter tick up right in front of them when they scanned. We had over 180 pledges in 3 hours. People are ready.", upvotes: 428 },
+                { author_alias: "NurseElena_RN", author_chapter: "Pacific Northwest - Seattle, WA", author_tier: 2, category: "Mutual Aid", title: "Setting up regional strike emergency food & insulin mutual aid banks", content: "When 30 million people withhold labor, we must protect our most vulnerable. Our healthcare worker caucus is drafting the emergency healthcare strike protocol to ensure urgent triage is maintained while economic leverage is maximized.", upvotes: 612 },
+                { author_alias: "AnonymousOrganizer_KC", author_chapter: "Heartland Chapter - Kansas City, MO", author_tier: 2, category: "Security & Legal", title: "Why Tier 1 anonymity protects the frontlines from employer retaliation", content: "A quick reminder to all field captains: when handing out QR codes, emphasize to workers that Tier 1 requires only a first name or alias. Their employer cannot subpoena a decentralized movement with zero public doxxing vectors.", upvotes: 389 },
+                { author_alias: "LogisticsDriver_09", author_chapter: "Inland Empire - Ontario, CA", author_tier: 2, category: "Direct Action", title: "Freight and logistics caucuses coordinating cross-state communication", content: "Supply chain workers are the spine of the economy. If the top 5 freight hubs pause simultaneously, the leverage is absolute. Keep spreading the QR cards at truck stops and fulfillment centers.", upvotes: 554 }
+              ];
+              const stmt = db.prepare(`INSERT INTO community_posts (author_alias, author_chapter, author_tier, category, title, content, upvotes) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+              initialPosts.forEach(p => stmt.run(p.author_alias, p.author_chapter, p.author_tier, p.category, p.title, p.content, p.upvotes));
+              stmt.finalize();
+            }
+            resolve();
+          });
+        });
       });
     });
   });
@@ -123,7 +123,9 @@ function getStats() {
         const percent = ((totalCount / 30000000) * 100).toFixed(4);
 
         db.all(`SELECT state, COUNT(*) as count FROM pledges WHERE state IS NOT NULL AND state != '' GROUP BY state ORDER BY count DESC LIMIT 10`, (err, stateRows) => {
+          if (err) return reject(err);
           db.all(`SELECT member_number, alias, state, tier, created_at FROM pledges ORDER BY id DESC LIMIT 8`, (err, recentRows) => {
+            if (err) return reject(err);
             resolve({
               total_pledges: totalCount,
               live_new_pledges: livePledges,
@@ -141,31 +143,32 @@ function getStats() {
 
 function addPledge({ alias, email, phone, state, tier = 1, sms_opt_in = 1, notes = '' }) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
-      if (err) return reject(err);
-      const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
-      const placeholderAlias = alias && alias.trim() ? alias.trim() : null;
-      const placeholderEmail = email && email.trim() ? email.trim() : null;
+    db.serialize(() => {
+      db.run(`BEGIN IMMEDIATE`, (err) => {
+        if (err) return reject(err);
+        db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
+          if (err) return db.run(`ROLLBACK`, () => reject(err));
+          const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
+          db.get(`SELECT MAX(member_number) as maxNum FROM pledges`, (err, maxRow) => {
+            if (err) return db.run(`ROLLBACK`, () => reject(err));
+            const nextMemberNumber = Math.max(baseCount, maxRow && maxRow.maxNum ? maxRow.maxNum : 0) + 1;
+            const cleanAlias = (alias && alias.trim()) ? alias.trim() : `Worker #${nextMemberNumber.toString().slice(-4)}`;
+            const cleanEmail = (email && email.trim()) ? email.trim() : `anonymous_${nextMemberNumber}@peoplesunion.local`;
 
-      db.run(
-        `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes)
-         SELECT
-           m.next_num,
-           COALESCE(?, 'Worker #' || substr(CAST(m.next_num AS TEXT), -4)),
-           COALESCE(?, 'anonymous_' || CAST(m.next_num AS TEXT) || '@peoplesunion.local'),
-           ?, ?, ?, ?, ?
-         FROM (SELECT COALESCE(MAX(member_number), ?) + 1 AS next_num FROM pledges) AS m`,
-        [placeholderAlias, placeholderEmail,
-         phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes,
-         baseCount],
-        function (err) {
-          if (err) return reject(err);
-          db.get(`SELECT member_number, alias, email, phone, state, tier FROM pledges WHERE rowid = ?`, [this.lastID], (err, row) => {
-            if (err) return reject(err);
-            resolve({ id: this.lastID, member_number: row.member_number, alias: row.alias, email: row.email, phone: row.phone, state: row.state, tier: row.tier });
+            db.run(
+              `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [nextMemberNumber, cleanAlias, cleanEmail, phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes],
+              function (err) {
+                if (err) return db.run(`ROLLBACK`, () => reject(err));
+                db.run(`COMMIT`, (err) => {
+                  if (err) return reject(err);
+                  resolve({ id: this.lastID, member_number: nextMemberNumber, alias: cleanAlias, email: cleanEmail, phone: phone || null, state: state || 'US', tier });
+                });
+              }
+            );
           });
-        }
-      );
+        });
+      });
     });
   });
 }
@@ -246,5 +249,14 @@ function upvotePost(postId) {
   });
 }
 
-module.exports = { db, initDb, getStats, addPledge, registerTier2, getDemands, voteDemand, getCommunityPosts, addCommunityPost, upvotePost };
+function getUserByEmail(email) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM users WHERE email = ? AND is_verified = 1`, [email], (err, row) => {
+      if (err) return reject(err);
+      resolve(row || null);
+    });
+  });
+}
+
+module.exports = { db, initDb, getStats, addPledge, registerTier2, getDemands, voteDemand, getCommunityPosts, addCommunityPost, upvotePost, getUserByEmail };
 

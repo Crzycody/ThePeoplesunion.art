@@ -145,23 +145,31 @@ function getStats() {
 
 function addPledge({ alias, email, phone, state, tier = 1, sms_opt_in = 1, notes = '' }) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
-      if (err) return reject(err);
-      const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
-      db.get(`SELECT MAX(member_number) as maxNum FROM pledges`, (err, maxRow) => {
+    db.serialize(() => {
+      db.run(`BEGIN IMMEDIATE`, (err) => {
         if (err) return reject(err);
-        const nextMemberNumber = Math.max(baseCount, maxRow && maxRow.maxNum ? maxRow.maxNum : 0) + 1;
-        const cleanAlias = (alias && alias.trim()) ? alias.trim() : `Worker #${nextMemberNumber.toString().slice(-4)}`;
-        const cleanEmail = (email && email.trim()) ? email.trim() : `anonymous_${nextMemberNumber}@peoplesunion.local`;
+        db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, baseRow) => {
+          if (err) return db.run(`ROLLBACK`, () => reject(err));
+          const baseCount = parseInt(baseRow ? baseRow.value : '1428914', 10);
+          db.get(`SELECT MAX(member_number) as maxNum FROM pledges`, (err, maxRow) => {
+            if (err) return db.run(`ROLLBACK`, () => reject(err));
+            const nextMemberNumber = Math.max(baseCount, maxRow && maxRow.maxNum ? maxRow.maxNum : 0) + 1;
+            const cleanAlias = (alias && alias.trim()) ? alias.trim() : `Worker #${nextMemberNumber.toString().slice(-4)}`;
+            const cleanEmail = (email && email.trim()) ? email.trim() : `anonymous_${nextMemberNumber}@peoplesunion.local`;
 
-        db.run(
-          `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [nextMemberNumber, cleanAlias, cleanEmail, phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes],
-          function (err) {
-            if (err) return reject(err);
-            resolve({ id: this.lastID, member_number: nextMemberNumber, alias: cleanAlias, email: cleanEmail, state: state || 'US', tier });
-          }
-        );
+            db.run(
+              `INSERT INTO pledges (member_number, alias, email, phone, state, tier, sms_opt_in, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [nextMemberNumber, cleanAlias, cleanEmail, phone || null, state ? state.trim().toUpperCase() : 'US', tier, sms_opt_in ? 1 : 0, notes],
+              function (err) {
+                if (err) return db.run(`ROLLBACK`, () => reject(err));
+                db.run(`COMMIT`, (err) => {
+                  if (err) return reject(err);
+                  resolve({ id: this.lastID, member_number: nextMemberNumber, alias: cleanAlias, email: cleanEmail, state: state || 'US', tier });
+                });
+              }
+            );
+          });
+        });
       });
     });
   });

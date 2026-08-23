@@ -187,9 +187,6 @@ function registerTier2({ alias, email, phone, state, chapter }) {
     });
   });
 }
-    } catch (e) { reject(e); }
-  });
-}
 
 function getDemands() {
   return new Promise((resolve, reject) => {
@@ -246,5 +243,14 @@ function upvotePost(postId) {
   });
 }
 
-module.exports = { db, initDb, getStats, addPledge, registerTier2, getDemands, voteDemand, getCommunityPosts, addCommunityPost, upvotePost };
+function getUserByEmail(email) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM users WHERE email = ? AND is_verified = 1`, [email], (err, row) => {
+      if (err) return reject(err);
+      resolve(row || null);
+    });
+  });
+}
+
+module.exports = { db, initDb, getStats, addPledge, registerTier2, getDemands, voteDemand, getCommunityPosts, addCommunityPost, upvotePost, getUserByEmail };
 

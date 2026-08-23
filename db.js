@@ -105,8 +105,10 @@ function initDb() {
           initialPosts.forEach(p => stmt.run(p.author_alias, p.author_chapter, p.author_tier, p.category, p.title, p.content, p.upvotes));
           stmt.finalize();
         }
-        resolve();
       });
+
+      // Resolve only after all serialized seed operations above have completed
+      db.run(`SELECT 1`, () => resolve());
     });
   });
 }

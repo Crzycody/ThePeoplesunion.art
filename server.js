@@ -49,9 +49,14 @@ app.get('/api/events', (req, res) => {
   const client = { id: Date.now(), res };
   sseClients.add(client);
 
-  db.getStats().then(stats => {
-    res.write(`event: initial\ndata: ${JSON.stringify({ ...stats, online_users: activeOnlineUsers })}\n\n`);
-  });
+  db.getStats()
+    .then(stats => {
+      res.write(`event: initial\ndata: ${JSON.stringify({ ...stats, online_users: activeOnlineUsers })}\n\n`);
+    })
+    .catch(err => {
+      console.error('SSE initial stats error:', err);
+      res.write(`event: error\ndata: ${JSON.stringify({ message: 'Failed to load initial stats' })}\n\n`);
+    });
 
   req.on('close', () => sseClients.delete(client));
 });

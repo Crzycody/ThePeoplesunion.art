@@ -94,13 +94,19 @@ app.post('/api/pledge', async (req, res) => {
 // Tier 2 registration
 app.post('/api/register-tier2', async (req, res) => {
   try {
-    const { alias, email, phone, state, chapter } = req.body;
+    const { alias, email, phone, state, chapter, invite_code } = req.body;
+    if (process.env.TIER2_INVITE_CODE && invite_code !== process.env.TIER2_INVITE_CODE) {
+      return res.status(403).json({ error: 'Tier 2 invite code required.' });
+    }
     if (!email || !alias) return res.status(400).json({ error: 'Alias and valid email are required for Tier 2 verification.' });
     const user = await db.registerTier2({ alias, email, phone, state, chapter });
     const currentStats = await db.getStats();
     broadcastSSE('new_pledge', { member_number: user.member_number, alias: user.alias, state: user.state, tier: 2, total_pledges: currentStats.total_pledges, online_users: activeOnlineUsers });
     res.json({ success: true, message: 'Tier 2 Account Verified. Welcome to the Organizer Caucus.', user, stats: currentStats });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    const status = err.message === 'Email already registered.' ? 409 : 500;
+    res.status(status).json({ error: err.message });
+  }
 });
 
 // Demands

@@ -15,11 +15,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // SSE clients
 const sseClients = new Set();
 
-let activeOnlineUsers = 4812;
-setInterval(() => {
-  const delta = Math.floor(Math.random() * 19) - 9;
-  activeOnlineUsers = Math.max(3500, activeOnlineUsers + delta);
-}, 4000);
+function getLiveOnlineUsers() {
+  return sseClients.size;
+}
 
 function broadcastSSE(eventType, data) {
   const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -32,7 +30,7 @@ setInterval(async () => {
   if (sseClients.size > 0) {
     try {
       const stats = await db.getStats();
-      broadcastSSE('heartbeat', { total_pledges: stats.total_pledges, online_users: activeOnlineUsers, percent_to_strike: stats.percent_to_strike });
+      broadcastSSE('heartbeat', { total_pledges: stats.total_pledges, online_users: getLiveOnlineUsers(), percent_to_strike: stats.percent_to_strike });
     } catch (e) { console.error('Heartbeat error:', e); }
   }
 }, 3000);
@@ -51,7 +49,7 @@ app.get('/api/events', (req, res) => {
 
   db.getStats()
     .then(stats => {
-      res.write(`event: initial\ndata: ${JSON.stringify({ ...stats, online_users: activeOnlineUsers })}\n\n`);
+      res.write(`event: initial\ndata: ${JSON.stringify({ ...stats, online_users: getLiveOnlineUsers() })}\n\n`);
     })
     .catch(err => {
       console.error('SSE initial stats error:', err);
@@ -68,7 +66,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/api/stats', async (req, res) => {
   try {
     const stats = await db.getStats();
-    res.json({ success: true, ...stats, online_users: activeOnlineUsers });
+    res.json({ success: true, ...stats, online_users: getLiveOnlineUsers() });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -89,7 +87,7 @@ app.post('/api/pledge', async (req, res) => {
       notes: notes || 'Street / QR Mobilization'
     });
     const currentStats = await db.getStats();
-    broadcastSSE('new_pledge', { member_number: pledge.member_number, alias: pledge.alias, state: pledge.state, tier: 1, total_pledges: currentStats.total_pledges, online_users: activeOnlineUsers });
+    broadcastSSE('new_pledge', { member_number: pledge.member_number, alias: pledge.alias, state: pledge.state, tier: 1, total_pledges: currentStats.total_pledges, online_users: getLiveOnlineUsers() });
     res.json({ success: true, message: "Pledge recorded. You are officially counted in The People's Union!", pledge, stats: currentStats });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -104,7 +102,7 @@ app.post('/api/register-tier2', async (req, res) => {
     if (!email || !alias) return res.status(400).json({ error: 'Alias and valid email are required for Tier 2 verification.' });
     const user = await db.registerTier2({ alias, email, phone, state, chapter });
     const currentStats = await db.getStats();
-    broadcastSSE('new_pledge', { member_number: user.member_number, alias: user.alias, state: user.state, tier: 2, total_pledges: currentStats.total_pledges, online_users: activeOnlineUsers });
+    broadcastSSE('new_pledge', { member_number: user.member_number, alias: user.alias, state: user.state, tier: 2, total_pledges: currentStats.total_pledges, online_users: getLiveOnlineUsers() });
     res.json({ success: true, message: 'Tier 2 Account Verified. Welcome to the Organizer Caucus.', user, stats: currentStats });
   } catch (err) {
     const status = err.message === 'Email already registered.' ? 409 : 500;

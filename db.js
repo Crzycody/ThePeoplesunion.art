@@ -69,9 +69,11 @@ function initDb() {
       `);
 
       // Seed metadata, then demands, then community posts sequentially before resolving
+      // Do not reset base_count on startup; seed it below only if missing.
       db.get(`SELECT value FROM meta WHERE key = 'base_count'`, (err, row) => {
         if (!row) {
-          db.run(`INSERT INTO meta (key, value) VALUES ('base_count', '1428914')`);
+          const initialBaseline = 0;
+          db.run(`INSERT INTO meta (key, value) VALUES ('base_count', ?)`, [initialBaseline.toString()]);
           db.run(`INSERT INTO meta (key, value) VALUES ('target_count', '30000000')`);
         }
 
